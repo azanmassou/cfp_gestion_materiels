@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tableau Dynamique avec En-tête et Pied de Page</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <style>
+      th,
+      td {
+        white-space: nowrap;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-4">
+      <!-- Input Title -->
+      <div id="titleSection" style="display: block">
+        <div class="container mt-5 text-center">
+          <div class="">
+            <h2>Bienvenue Mr Gratien TEHOUNGUE</h2>
+            <p>Demmarer un nouveau projet maintenant</p>
+            <div
+              class="d-flex"
+              style="justify-content: center; align-items: center"
+            >
+              <div class="mx-2">
+                <input
+                  type="text"
+                  id="titleInput"
+                  class="form-control"
+                  placeholder="Titre du projet"
+                />
+              </div>
+              <div class="mx-2">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  onclick="validerTitre()"
+                >
+                  Valider
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="mt-4">
+            <div class="row">
+              <h2>Recents projets : </h2>
+              <div class="col-lg-4">
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+              </div>
+              <div class="col-lg-4">
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+              </div>
+              <div class="col-lg-4">
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+                <p><a href="#">Clique here</a></p>
+              </div>
+            </div>
+          </div> -->
+        </div>
+      </div>
+
+      <!-- Tableau -->
+      <div id="tableSection" style="display: none">
+        <div class="row mb-4">
+          <div class="col text-right">
+            <p>Fait à Cotonou le <span id="date"></span></p>
+          </div>
+        </div>
+        <div class="row text-center my-2">
+          <div class="col-md-6 offset-2">
+            <h2 id="tableTitle"></h2>
+          </div>
+          <div class="col text-right">
+            <button
+              type="button"
+              class="btn btn-warning btn-sm"
+              id="submitBtn"
+              onclick="genererPDF()"
+            >
+              Soumettre
+            </button>
+            <button
+              type="button"
+              class="btn btn-success btn-sm"
+              onclick="ajouterLigne()"
+            >
+              Ajouter Entrée
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="editableTable" class="table table-bordered">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Désignation</th>
+                <th>Qts</th>
+                <th>Prix Unitaires</th>
+                <th>Montant</th>
+                <th>Actions</th>
+                <!-- Nouvelle colonne pour les actions -->
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td contenteditable="false">1</td>
+                <td contenteditable="true">Nom du Produit</td>
+                <td contenteditable="true">1</td>
+                <td contenteditable="true">2000</td>
+                <td contenteditable="false">2000</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    onclick="supprimerLigne(this)"
+                  >
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr id="totalRow">
+                <th colspan="4" class="text-right">Total</th>
+                <th id="totalMontantFcfa">2000</th>
+                <th></th>
+                <!-- Colonne vide pour aligner les boutons d'actions -->
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="row">
+          <!-- Chargé de Matériel -->
+          <div class="col container text-right">
+            <p>Le Chargé de Matériel</p>
+            <p>Gratien TEHOUNGUE</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function majMontantFcfa() {
+        const table = document
+          .getElementById("editableTable")
+          .getElementsByTagName("tbody")[0];
+        const rows = table.getElementsByTagName("tr");
+        let total = 0;
+        for (let i = 0; i < rows.length; i++) {
+          const qts = parseFloat(rows[i].cells[2].innerText) || 0; // Utiliser 0 si la valeur est vide
+          const prixUnitaires = parseFloat(rows[i].cells[3].innerText) || 0; // Utiliser 0 si la valeur est vide
+          const montant = qts * prixUnitaires;
+          rows[i].cells[4].innerText = montant;
+          total += montant;
+        }
+        document.getElementById("totalMontantFcfa").innerText = total;
+      }
+
+      function ajouterLigne() {
+        const table = document
+          .getElementById("editableTable")
+          .getElementsByTagName("tbody")[0];
+        const newRow = table.insertRow();
+        const cellCount = table.rows[0].cells.length;
+
+        // Numéro de ligne auto-incrémenté
+        const cellNo = newRow.insertCell(0);
+        cellNo.textContent = table.rows.length;
+        cellNo.setAttribute("contenteditable", "false");
+
+        for (let i = 1; i < cellCount - 2; i++) {
+          const cell = newRow.insertCell(i);
+          cell.contentEditable = true;
+          cell.innerText = "";
+        }
+
+        // Ajouter la dernière cellule pour le montant
+        const montantCell = newRow.insertCell(cellCount - 2);
+        montantCell.contentEditable = false;
+        montantCell.innerText = "0";
+
+        // Ajouter la cellule pour l'action "Supprimer"
+        const removeCell = newRow.insertCell(cellCount - 1);
+        removeCell.innerHTML = `<button type="button" class="btn btn-danger btn-sm" onclick="supprimerLigne(this)">
+                                Supprimer
+                              </button>`;
+
+        // Recalculer le total
+        majMontantFcfa();
+      }
+
+      function supprimerLigne(button) {
+        const row = button.closest("tr");
+        if (row.rowIndex === 1) return; // Ne supprime pas la première ligne
+        row.remove();
+        majMontantFcfa();
+      }
+
+      function verifierChamps() {
+        const table = document
+          .getElementById("editableTable")
+          .getElementsByTagName("tbody")[0];
+        const rows = table.getElementsByTagName("tr");
+        let champsVides = false;
+        let champsNonNumeriques = false;
+        let regex = /^[0-9]*$/;
+
+        for (let i = 0; i < rows.length; i++) {
+          const inputs = rows[i].querySelectorAll("td[contenteditable='true']");
+          const designation = inputs[0].innerText.trim();
+          const qts = inputs[1].innerText.trim();
+          const prixUnitaires = inputs[2].innerText.trim();
+          if (designation === "" || qts === "" || prixUnitaires === "") {
+            champsVides = true;
+            alert("Erreur: Veuillez remplir tous les champs.");
+            break;
+          }
+          if (!regex.test(qts) || !regex.test(prixUnitaires)) {
+            champsNonNumeriques = true;
+            alert(
+              "Erreur: Veuillez entrer des valeurs numériques pour Quantité et Prix unitaire."
+            );
+            break;
+          }
+        }
+
+        return !champsVides && !champsNonNumeriques;
+      }
+
+      function verifierTitle() {
+        const titleInput = document.getElementById("titleInput");
+        if (titleInput.value == "") {
+          alert("Erreur: Veuillez entrer un titre pour le tableau.");
+          return;
+        }
+      }
+
+      function validerTitre() {
+        const titleInput = document.getElementById("titleInput");
+        if (titleInput.value == "") {
+          alert("Erreur: Veuillez entrer un titre pour le tableau.");
+          return;
+        }
+
+        // Masquer la section du titre et afficher la section du tableau
+        document.getElementById("titleSection").style.display = "none";
+        document.getElementById("tableSection").style.display = "block";
+
+        // Définir le titre du tableau à partir de l'input
+        const tableTitle = document.getElementById("tableTitle");
+        tableTitle.textContent = titleInput.value;
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mettre à jour la date du jour
+        const dateElement = document.getElementById("date");
+        const today = new Date();
+        const options = { year: "numeric", month: "long", day: "numeric" };
+        dateElement.textContent = today.toLocaleDateString("fr-FR", options);
+
+        majMontantFcfa(); // Appeler pour afficher le montant total initial
+      });
+
+      document
+        .getElementById("editableTable")
+        .addEventListener("input", function (event) {
+          majMontantFcfa();
+        });
+
+      function genererPDF() {
+        const table = document
+          .getElementById("editableTable")
+          .getElementsByTagName("tbody")[0];
+        const rows = table.getElementsByTagName("tr");
+
+        // Vérifier si un champ est vide
+        let champsVides = false;
+        for (let i = 0; i < rows.length; i++) {
+          const inputs = rows[i].querySelectorAll("td[contenteditable='true']");
+          for (let j = 1; j < inputs.length - 1; j++) {
+            if (inputs[j].innerText.trim() === "") {
+              champsVides = true;
+              break;
+            }
+          }
+          if (champsVides) break;
+        }
+
+        if (champsVides) {
+          alert("Veuillez remplir tous les champs avant de soumettre.");
+          return;
+        }
+
+        // Vérifier si Qts et Prix Unitaires contiennent uniquement des chiffres
+        let regex = /^[0-9]*$/;
+        let champsNonNumeriques = false;
+        for (let i = 0; i < rows.length; i++) {
+          const qts = rows[i].cells[2].innerText.trim();
+          const prixUnitaires = rows[i].cells[3].innerText.trim();
+          if (!regex.test(qts) || !regex.test(prixUnitaires)) {
+            champsNonNumeriques = true;
+            break;
+          }
+        }
+
+        if (champsNonNumeriques) {
+          alert(
+            "Les champs 'Qts' et 'Prix Unitaires' doivent contenir uniquement des chiffres."
+          );
+          return;
+        }
+
+        if (!verifierChamps()) {
+          // alert(
+          //   "Erreur: Veuillez remplir tous les champs numériques avant de soumettre."
+          // );
+          return;
+        }
+
+        verifierTitle();
+
+        // Générer et sauvegarder le PDF
+        const element = document.body;
+        const opt = {
+          margin: 0.5,
+          filename: titleInput.value,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        };
+        html2pdf().from(element).set(opt).save();
+      }
+    </script>
+  </body>
+</html>
